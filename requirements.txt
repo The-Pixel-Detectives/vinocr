@@ -1,0 +1,9 @@
+torch
+torchvision
+transformers
+pillow
+matplotlib
+numpy
+timm
+einops
+flash-attn==2.6.3
