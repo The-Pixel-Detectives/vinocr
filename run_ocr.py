@@ -129,7 +129,7 @@ def process_images_and_save_responses(folder_path, output_folder, model, tokeniz
                     generation_config = dict(max_new_tokens=512, do_sample=False, num_beams=3, repetition_penalty=3.5)
 
                 # Define the question or prompt
-                question = '<image>\nTrích xuất tất cả kí tự, chữ, số trên hình.'
+                question = '<image>\nMiêu tả và trích xuất tất cả kí tự, chữ, số trên hình.'
 
                 # Generate the response from the model
                 response = model.chat(tokenizer, pixel_values, question, generation_config)
