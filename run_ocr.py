@@ -99,6 +99,13 @@ def ensure_dir(file_path):
     if not os.path.exists(file_path):
         os.makedirs(file_path)
 
+# Function to load and display the image
+def display_image(image_path):
+    img = Image.open(image_path)
+    plt.imshow(img)
+    plt.axis('off')  # Hide axes
+    plt.show()
+
 # Function to process images and save responses to text files
 def process_images_and_save_responses(folder_path, output_folder, model, tokenizer, max_num=6, generation_config=None):
     # Ensure the output folder exists
@@ -107,6 +114,11 @@ def process_images_and_save_responses(folder_path, output_folder, model, tokeniz
     # Iterate through all files in the folder
     for root, dirs, files in os.walk(folder_path):
         for file_name in files:
+            # Skip files that contain '._' in their names (usually macOS metadata files)
+            if "._" in file_name:
+                # print(f"Skipping {file_name} (contains '._').")
+                continue
+
             # Only process files that end with .jpeg (you can modify this to include other formats if needed)
             if file_name.endswith('.jpeg'):
                 # Full path to the input image
@@ -121,6 +133,14 @@ def process_images_and_save_responses(folder_path, output_folder, model, tokeniz
                 # Create output file path by replacing .jpeg with .txt
                 output_txt_path = os.path.join(output_dir, os.path.splitext(file_name)[0] + '.txt')
 
+                # **Skip processing if the output already exists**
+                if os.path.exists(output_txt_path):
+                    # print(f"Skipping {file_name}, output already exists.")
+                    continue
+
+                # Display the image (optional)
+                # display_image(image_path)
+
                 # Load and preprocess the image
                 pixel_values = load_image(image_path, max_num=max_num).to(torch.bfloat16).cuda()
 
@@ -131,19 +151,32 @@ def process_images_and_save_responses(folder_path, output_folder, model, tokeniz
                 # Define the question or prompt
                 question = '<image>\nMiêu tả và trích xuất tất cả kí tự, chữ, số trên hình.'
 
+                # Start time measurement for inference
+                start_time = time.time()
+
                 # Generate the response from the model
                 response = model.chat(tokenizer, pixel_values, question, generation_config)
+
+                # End time measurement for inference
+                end_time = time.time()
+
+                # Calculate inference time
+                inference_time = end_time - start_time
+
+                # Print the response to the console
+                print(f"Response for {file_name}:")
+                print(response)
 
                 # Write only the response to a text file
                 with open(output_txt_path, 'w', encoding='utf-8') as f:
                     f.write(response)
 
-                # Print the completed files
+                # Print the completed file and inference time
                 print(f"Processed file: {file_name} and saved to: {output_txt_path}")
+                print(f"Inference time for {file_name}: {inference_time:.2f} seconds")
 
 input_folder = "/keyframes"
 output_folder = "/transcriptions"
 
 # Call the function to process all images in the folder and save transcriptions
 process_images_and_save_responses(input_folder, output_folder, model, tokenizer)
-
